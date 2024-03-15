@@ -6,7 +6,11 @@ Using the library and guidance from the [2dom/PxMatrix repo](https://github.com/
 
 ## The projects
 
+The following projects use parameters that work with the above mentioned specific panel.
+
+- [Sand Matrix](./src/sand)
+  - Code ported from [my other sand matrix project](https://github.com/billism1/sand-matrix).
 - [Pixel Time](./src/AuroraDemo)
-  - Copied from: [2dom/PxMatrix pixeltime example](https://github.com/2dom/PxMatrix/tree/master/examples/pixeltime), with the correct parameters for the above mentioned specific panel.
+  - Copied from: [2dom/PxMatrix pixeltime example](https://github.com/2dom/PxMatrix/tree/master/examples/pixeltime).
 - [Aurora Demo](./src/PixelTime)
-  - Copied from: [2dom/PxMatrix Aurora_Demo example](https://github.com/2dom/PxMatrix/tree/master/examples/Aurora_Demo), with the correct parameters for the above mentioned specific panel.
+  - Copied from: [2dom/PxMatrix Aurora_Demo example](https://github.com/2dom/PxMatrix/tree/master/examples/Aurora_Demo).
