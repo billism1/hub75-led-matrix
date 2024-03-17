@@ -12,8 +12,8 @@ class PatternTest : public Drawable {
 
     unsigned int drawFrame() {
 
-       display.fillScreen(display.color565(128, 0, 0));  
-    
+       dma_display->fillScreen(dma_display->color565(128, 0, 0));  
+      return 1000;
     }
 };
 

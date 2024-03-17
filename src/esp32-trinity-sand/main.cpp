@@ -11,7 +11,7 @@
 #define B_PIN 19
 #define C_PIN 5
 #define D_PIN 17
-#define E_PIN 18 // Needed fo 64x64. This is the only change from the default pins of the library
+#define E_PIN 18  // Needed fo 64x64. This is the only change from the default pins of the library
 #define LAT_PIN 4
 #define OE_PIN 15
 #define CLK_PIN 16
@@ -370,6 +370,7 @@ void displaySetup()
   // Display Setup
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
+  //dma_display->setBrightness(255);
 }
 
 void setup()
