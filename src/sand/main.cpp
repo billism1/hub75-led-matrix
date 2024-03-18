@@ -17,9 +17,9 @@
 #define CLK_PIN 16
 
 /*--------------------- MATRIX PANEL CONFIG -------------------------*/
-const int panelResX = 64;  // Number of pixels wide of each INDIVIDUAL panel module.
-const int panelResY = 64;  // Number of pixels tall of each INDIVIDUAL panel module.
-const int panel_chain = 1; // Total number of panels chained one to another
+const int panelResX = MATRIX_WIDTH;  // Number of pixels wide of each INDIVIDUAL panel module.
+const int panelResY = MATRIX_HEIGHT;  // Number of pixels tall of each INDIVIDUAL panel module.
+const int panel_chain = MATRIX_PANEL_CHAIN; // Total number of panels chained one to another
 
 // Note about chaining panels:
 // By default all matrix libraries treat the panels as been connected horizontally
@@ -68,8 +68,8 @@ int16_t adjacentVelocityResetValue = 3;
 // End parameters you can play with
 //////////////////////////////////////////
 
-static const uint16_t ROWS = panelResX;
-static const uint16_t COLS = panelResY;
+static const uint16_t ROWS = MATRIX_HEIGHT;
+static const uint16_t COLS = MATRIX_WIDTH * MATRIX_PANEL_CHAIN;
 
 struct GridState
 {
@@ -207,7 +207,7 @@ void setNextColor(byte *rgbValues, uint16_t &kValue)
 
 void setNextColor(uint16_t xCol, uint16_t yRow, uint16_t &kValue)
 {
-  CRGB *pixel = &(pixels[xCol][yRow]);
+  CRGB *pixel = &(pixels[yRow][xCol]);
   setNextColor(pixel->raw, kValue);
 
   dma_display->drawPixelRGB888(xCol, yRow, pixel->red, pixel->green, pixel->blue);
@@ -300,7 +300,7 @@ void resetAdjacentPixels(int16_t x, int16_t y)
 
 void setColor(uint16_t xCol, uint16_t yRow, int8_t _red, int8_t _green, int8_t _blue)
 {
-  CRGB *crgb = &(pixels[xCol][yRow]);
+  CRGB *crgb = &(pixels[yRow][xCol]);
 
   crgb->raw[0] = _red;   /// * `raw[0]` is the red value
   crgb->raw[1] = _green; /// * `raw[1]` is the green value
@@ -493,7 +493,7 @@ void loop()
       // Tread lightly in here, and check as few pixels as needed.
 
       // Get the state of the current pixel.
-      CRGB pixelColor = pixels[j][i];
+      CRGB pixelColor = pixels[i][j];
       uint16_t pixelState = stateGrid[i][j].state;
       int16_t pixelVelocity = stateGrid[i][j].velocity;
       uint16_t pixelKValue = stateGrid[i][j].kValue;
