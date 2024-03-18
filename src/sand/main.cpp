@@ -17,8 +17,8 @@
 #define CLK_PIN 16
 
 /*--------------------- MATRIX PANEL CONFIG -------------------------*/
-const int panelResX = MATRIX_WIDTH;  // Number of pixels wide of each INDIVIDUAL panel module.
-const int panelResY = MATRIX_HEIGHT;  // Number of pixels tall of each INDIVIDUAL panel module.
+const int panelResX = MATRIX_PANEL_WIDTH;  // Number of pixels wide of each INDIVIDUAL panel module.
+const int panelResY = MATRIX_PANEL_HEIGHT;  // Number of pixels tall of each INDIVIDUAL panel module.
 const int panel_chain = MATRIX_PANEL_CHAIN; // Total number of panels chained one to another
 
 // Note about chaining panels:
@@ -45,6 +45,9 @@ uint16_t myBLACK = dma_display->color565(0, 0, 0);
 // Sand setup
 //////////////////////
 
+static const uint16_t ROWS = MATRIX_HEIGHT;
+static const uint16_t COLS = MATRIX_WIDTH;
+
 //////////////////////////////////////////
 // Parameters you can play with:
 
@@ -67,9 +70,6 @@ int16_t adjacentVelocityResetValue = 3;
 
 // End parameters you can play with
 //////////////////////////////////////////
-
-static const uint16_t ROWS = MATRIX_HEIGHT;
-static const uint16_t COLS = MATRIX_WIDTH * MATRIX_PANEL_CHAIN;
 
 struct GridState
 {

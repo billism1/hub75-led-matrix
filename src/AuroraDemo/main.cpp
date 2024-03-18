@@ -17,9 +17,9 @@
 #define CLK_PIN 16
 
 /*--------------------- MATRIX PANEL CONFIG -------------------------*/
-#define PANEL_RES_X MATRIX_WIDTH      // Number of pixels wide of each INDIVIDUAL panel module. 
-#define PANEL_RES_Y MATRIX_HEIGHT     // Number of pixels tall of each INDIVIDUAL panel module.
-#define PANEL_CHAIN 1      // Total number of panels chained one to another
+#define PANEL_RES_X MATRIX_PANEL_WIDTH          // Number of pixels wide of each INDIVIDUAL panel module. 
+#define PANEL_RES_Y MATRIX_PANEL_HEIGHT         // Number of pixels tall of each INDIVIDUAL panel module.
+#define PANEL_CHAIN MATRIX_PANEL_CHAIN          // Total number of panels chained one to another
  
 /*
 //Another way of creating config structure
