@@ -837,7 +837,7 @@ void loop()
 
         if (pixelState == GRID_STATE_NEW)
           nextStateGrid[i][j].state = GRID_STATE_FALLING;
-        else if (pixelState == GRID_STATE_FALLING && pixelVelocity > 2)
+        else if (pixelState == GRID_STATE_FALLING && pixelVelocity > 20)
           nextStateGrid[i][j].state = GRID_STATE_COMPLETE;
         else
           nextStateGrid[i][j].state = pixelState; // should be GRID_STATE_COMPLETE
