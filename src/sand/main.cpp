@@ -1,57 +1,64 @@
-#include <Arduino.h>
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
-#define PxMATRIX_COLOR_DEPTH 5
+/*--------------------- MATRIX GPIO CONFIG  -------------------------*/
+#define R1_PIN 25
+#define G1_PIN 26
+#define B1_PIN 27
+#define R2_PIN 14
+#define G2_PIN 12
+#define B2_PIN 13
+#define A_PIN 23
+#define B_PIN 19
+#define C_PIN 5
+#define D_PIN 17
+#define E_PIN 18  // Needed fo 64x64. This is the only change from the default pins of the library
+#define LAT_PIN 4
+#define OE_PIN 15
+#define CLK_PIN 16
 
-#include <PxMatrix.h>
+/*--------------------- MATRIX PANEL CONFIG -------------------------*/
+const int panelResX = MATRIX_PANEL_WIDTH;  // Number of pixels wide of each INDIVIDUAL panel module.
+const int panelResY = MATRIX_PANEL_HEIGHT;  // Number of pixels tall of each INDIVIDUAL panel module.
+const int panel_chain = MATRIX_PANEL_CHAIN; // Total number of panels chained one to another
 
-#define ROW_PATTERN_1_32 32 // 1/32 scan LED panel
+// Note about chaining panels:
+// By default all matrix libraries treat the panels as been connected horizontally
+// (one long display). The I2S Matrix library supports different display configurations
+// Details here:
 
-#define P_LAT 22
-#define P_A 19
-#define P_B 23
-#define P_C 18
-#define P_D 5
-#define P_E 15
-#define P_OE 16
-hw_timer_t *timer = NULL;
-portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+// See the setup method for more display config options
+//------------------------------------------------------------------------------------------------------------------
 
-PxMATRIX display(64, 64, P_LAT, P_OE, P_A, P_B, P_C, P_D, P_E);
-
-#define matrix_width 64
-#define matrix_height 64
-
-// This defines the 'on' time of the display is us. The larger this number,
-// the brighter the display. If too large the ESP will crash
-uint8_t display_draw_time = 20; // 30-70 is usually fine
+MatrixPanel_I2S_DMA *dma_display = nullptr;
 
 // Some standard colors
-uint16_t myRED = display.color565(255, 0, 0);
-uint16_t myGREEN = display.color565(0, 255, 0);
-uint16_t myBLUE = display.color565(0, 0, 255);
-uint16_t myWHITE = display.color565(255, 255, 255);
-uint16_t myYELLOW = display.color565(255, 255, 0);
-uint16_t myCYAN = display.color565(0, 255, 255);
-uint16_t myMAGENTA = display.color565(255, 0, 255);
-uint16_t myBLACK = display.color565(0, 0, 0);
-
-uint16_t myCOLORS[8] = {myRED, myGREEN, myBLUE, myWHITE, myYELLOW, myCYAN, myMAGENTA, myBLACK};
+uint16_t myRED = dma_display->color565(255, 0, 0);
+uint16_t myGREEN = dma_display->color565(0, 255, 0);
+uint16_t myBLUE = dma_display->color565(0, 0, 255);
+uint16_t myWHITE = dma_display->color565(255, 255, 255);
+uint16_t myYELLOW = dma_display->color565(255, 255, 0);
+uint16_t myCYAN = dma_display->color565(0, 255, 255);
+uint16_t myMAGENTA = dma_display->color565(255, 0, 255);
+uint16_t myBLACK = dma_display->color565(0, 0, 0);
 
 //////////////////////
 // Sand setup
 //////////////////////
 
+static const uint16_t ROWS = MATRIX_HEIGHT;
+static const uint16_t COLS = MATRIX_WIDTH;
+
 //////////////////////////////////////////
 // Parameters you can play with:
 
-int16_t millisToChangeColor = 350;
-int16_t millisToChangeAllColors = 175;
-int16_t millisToChangeInputX = 6000;
+int16_t millisToChangeColor = 250;
+int16_t millisToChangeAllColors = 75;
+int16_t millisToChangeInputX = 4000;
 
-int16_t inputWidth = 2;
+int16_t inputWidth = 3;
 int16_t inputX = 4;
 int16_t inputY = 0;
-int16_t percentInputFill = 30;
+int16_t percentInputFill = 85;
 
 // Maximum frames per second.
 // The high the value, the faster the pixels fall.
@@ -63,9 +70,6 @@ int16_t adjacentVelocityResetValue = 3;
 
 // End parameters you can play with
 //////////////////////////////////////////
-
-static const uint16_t ROWS = matrix_width;
-static const uint16_t COLS = matrix_height;
 
 struct GridState
 {
@@ -203,10 +207,10 @@ void setNextColor(byte *rgbValues, uint16_t &kValue)
 
 void setNextColor(uint16_t xCol, uint16_t yRow, uint16_t &kValue)
 {
-  CRGB *pixel = &(pixels[xCol][yRow]);
+  CRGB *pixel = &(pixels[yRow][xCol]);
   setNextColor(pixel->raw, kValue);
 
-  display.drawPixelRGB888(xCol, yRow, pixel->red, pixel->green, pixel->blue);
+  dma_display->drawPixelRGB888(xCol, yRow, pixel->red, pixel->green, pixel->blue);
 }
 
 bool withinCols(int16_t value)
@@ -296,13 +300,13 @@ void resetAdjacentPixels(int16_t x, int16_t y)
 
 void setColor(uint16_t xCol, uint16_t yRow, int8_t _red, int8_t _green, int8_t _blue)
 {
-  CRGB *crgb = &(pixels[xCol][yRow]);
+  CRGB *crgb = &(pixels[yRow][xCol]);
 
   crgb->raw[0] = _red;   /// * `raw[0]` is the red value
   crgb->raw[1] = _green; /// * `raw[1]` is the green value
   crgb->raw[2] = _blue;  /// * `raw[2]` is the blue value
 
-  display.drawPixelRGB888(xCol, yRow, _red, _green, _blue);
+  dma_display->drawPixelRGB888(xCol, yRow, _red, _green, _blue);
 }
 
 void resetGrid()
@@ -334,44 +338,46 @@ void resetGrid()
 // End sand funcitons.
 //////////////////////
 
-void IRAM_ATTR display_updater()
+void displaySetup()
 {
-  // Increment the counter and set the time of ISR
-  portENTER_CRITICAL_ISR(&timerMux);
-  display.display(display_draw_time);
-  portEXIT_CRITICAL_ISR(&timerMux);
-}
+  HUB75_I2S_CFG mxconfig(
+      panelResX,  // module width
+      panelResY,  // module height
+      panel_chain // Chain length
+  );
 
-void display_update_enable(bool is_enable)
-{
-  if (is_enable)
-  {
-    timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &display_updater, true);
-    timerAlarmWrite(timer, 4000, true);
-    timerAlarmEnable(timer);
-  }
-  else
-  {
-    timerDetachInterrupt(timer);
-    timerAlarmDisable(timer);
-  }
+  // This is how you enable the double buffer.
+  // Double buffer can help with animation heavy projects
+  // It's not needed for something simple like this, but some
+  // of the other examples make use of it.
+
+  // mxconfig.double_buff = true;
+
+  // If you are using a 64x64 matrix you need to pass a value for the E pin
+  // The trinity connects GPIO 18 to E.
+  // This can be commented out for any smaller displays (but should work fine with it)
+  mxconfig.gpio.e = 18;
+
+  // May or may not be needed depending on your matrix
+  // Example of what needing it looks like:
+  // https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA/issues/134#issuecomment-866367216
+  mxconfig.clkphase = false;
+
+  // Some matrix panels use different ICs for driving them and some of them have strange quirks.
+  // If the display is not working right, try this.
+  // mxconfig.driver = HUB75_I2S_CFG::FM6126A;
+
+  // Display Setup
+  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  dma_display->begin();
+  //dma_display->setBrightness(255);
 }
 
 void setup()
 {
   Serial.begin(115200);
 
-  display.begin(ROW_PATTERN_1_32);
-
-  display.clearDisplay();
-  // display.setTextColor(myCYAN);
-  // display.setCursor(2, 0);
-  // display.print("It's Sand");
-  // display.setTextColor(myMAGENTA);
-  // display.setCursor(2, 8);
-  // display.print("Time");
-  display_update_enable(true);
+  displaySetup();
 
   // delay(3000);
 
@@ -428,7 +434,7 @@ void loop()
   // Serial.println("Looping within FPS limit...");
 
   // Change the inputX of the pixels over time or if the current input is already filled.
-  if (inputXChangeTime < millis() || stateGrid[inputY][inputX].state != GRID_STATE_NONE)
+  if (inputXChangeTime < millis())
   {
     inputXChangeTime = millis() + millisToChangeInputX;
     inputX = random(0, COLS);
@@ -453,7 +459,8 @@ void loop()
         int16_t row = inputY + j;
 
         if (withinCols(col) && withinRows(row) &&
-            (stateGrid[row][col].state == GRID_STATE_NONE || stateGrid[row][col].state == GRID_STATE_COMPLETE))
+          stateGrid[row][col].state == GRID_STATE_NONE)
+            //(stateGrid[row][col].state == GRID_STATE_NONE || stateGrid[row][col].state == GRID_STATE_COMPLETE))
         {
           setColor(col, row, COLORS_ARRAY_RED, COLORS_ARRAY_GREEN, COLORS_ARRAY_BLUE);
           stateGrid[row][col].state = GRID_STATE_NEW;
@@ -487,7 +494,7 @@ void loop()
       // Tread lightly in here, and check as few pixels as needed.
 
       // Get the state of the current pixel.
-      CRGB pixelColor = pixels[j][i];
+      CRGB pixelColor = pixels[i][j];
       uint16_t pixelState = stateGrid[i][j].state;
       int16_t pixelVelocity = stateGrid[i][j].velocity;
       uint16_t pixelKValue = stateGrid[i][j].kValue;

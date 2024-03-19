@@ -1,6 +1,8 @@
 # Aurora_Demo
 
-Copied from: https://github.com/2dom/PxMatrix/tree/master/examples/Aurora_Demo
+Copied from: https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-DMA/blob/master/examples/AuroraDemo
+
+I modified it to work with a 64x64 panel.
 
 From README.md in that repo:
 
