@@ -51,14 +51,14 @@ static const uint16_t COLS = MATRIX_WIDTH;
 //////////////////////////////////////////
 // Parameters you can play with:
 
-int16_t millisToChangeColor = 350;
-int16_t millisToChangeAllColors = 175;
-int16_t millisToChangeInputX = 6000;
+int16_t millisToChangeColor = 250;
+int16_t millisToChangeAllColors = 75;
+int16_t millisToChangeInputX = 4000;
 
-int16_t inputWidth = 2;
+int16_t inputWidth = 3;
 int16_t inputX = 4;
 int16_t inputY = 0;
-int16_t percentInputFill = 30;
+int16_t percentInputFill = 85;
 
 // Maximum frames per second.
 // The high the value, the faster the pixels fall.
@@ -434,7 +434,7 @@ void loop()
   // Serial.println("Looping within FPS limit...");
 
   // Change the inputX of the pixels over time or if the current input is already filled.
-  if (inputXChangeTime < millis() || stateGrid[inputY][inputX].state == GRID_STATE_COMPLETE)
+  if (inputXChangeTime < millis())
   {
     inputXChangeTime = millis() + millisToChangeInputX;
     inputX = random(0, COLS);
@@ -459,7 +459,8 @@ void loop()
         int16_t row = inputY + j;
 
         if (withinCols(col) && withinRows(row) &&
-            (stateGrid[row][col].state == GRID_STATE_NONE || stateGrid[row][col].state == GRID_STATE_COMPLETE))
+          stateGrid[row][col].state == GRID_STATE_NONE)
+            //(stateGrid[row][col].state == GRID_STATE_NONE || stateGrid[row][col].state == GRID_STATE_COMPLETE))
         {
           setColor(col, row, COLORS_ARRAY_RED, COLORS_ARRAY_GREEN, COLORS_ARRAY_BLUE);
           stateGrid[row][col].state = GRID_STATE_NEW;
