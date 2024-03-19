@@ -10,7 +10,12 @@ The following projects use parameters that work with the above mentioned specifi
 
 - [Sand Matrix](./src/sand)
   - Code ported from [my other sand matrix project](https://github.com/billism1/sand-matrix).
+  
+- [Sand Matrix with Accelerometer](./src/sand-accel)
+  - Adafruit [LIS3DH](https://learn.adafruit.com/adafruit-lis3dh-triple-axis-accelerometer-breakout) accelerometer added to the [Sand Matrix](./src/sand) project.
+
 - [Pixel Time](./src/AuroraDemo)
   - Copied from: [2dom/PxMatrix pixeltime example](https://github.com/2dom/PxMatrix/tree/master/examples/pixeltime) and modified to use with the [ESP32-HUB75-MatrixPanel-DMA library](https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-DMA).
+
 - [Aurora Demo](./src/PixelTime)
   - Copied from: [2dom/PxMatrix Aurora_Demo example](https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-DMA).
