@@ -837,6 +837,7 @@ void loop()
 
         if (pixelState == GRID_STATE_NEW)
           nextStateGrid[i][j].state = GRID_STATE_FALLING;
+        // TODO: Better way (than increasing velocity to 20 while the pixel is stopped) to allow pixels to be "reset" on orientation change.
         else if (pixelState == GRID_STATE_FALLING && pixelVelocity > 20)
           nextStateGrid[i][j].state = GRID_STATE_COMPLETE;
         else
