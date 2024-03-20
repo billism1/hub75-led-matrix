@@ -278,83 +278,105 @@ void setNextColorAll()
   }
 }
 
-void resetAdjacentPixels(int16_t x, int16_t y)
+// void resetAllPixels()
+// {
+//   Serial.println("Resetting all pixels.");
+
+//   for (uint16_t i = 0; i < ROWS; ++i)
+//   {
+//     for (uint16_t j = 0; j < COLS; ++j)
+//     {
+//       if (stateGrid[i][j].state != GRID_STATE_NONE)
+//       {
+//         stateGrid[i][j].state = GRID_STATE_FALLING;
+//         stateGrid[i][j].velocity = 1;
+//       }
+//     }
+//   }
+
+//   Serial.println("Done resetting all pixels.");
+// }
+
+bool isUpright()
 {
-  int16_t xPlus = x + 1;
-  int16_t xMinus = x - 1;
-  int16_t yPlus = y + 1;
-  int16_t yMinus = y - 1;
+  return orientation == Orientation::UPRIGHT;
+}
 
-  // Row above
-  if (withinRows(yMinus))
-  {
-    if (nextStateGrid[yMinus][xMinus].state == GRID_STATE_COMPLETE)
-    {
-      nextStateGrid[yMinus][xMinus].state = GRID_STATE_FALLING;
-      nextStateGrid[yMinus][xMinus].velocity = adjacentVelocityResetValue;
-    }
-    if (nextStateGrid[yMinus][x].state == GRID_STATE_COMPLETE)
-    {
-      nextStateGrid[yMinus][x].state = GRID_STATE_FALLING;
-      nextStateGrid[yMinus][x].velocity = adjacentVelocityResetValue;
-    }
-    if (nextStateGrid[yMinus][xPlus].state == GRID_STATE_COMPLETE)
-    {
-      nextStateGrid[yMinus][xPlus].state = GRID_STATE_FALLING;
-      nextStateGrid[yMinus][xPlus].velocity = adjacentVelocityResetValue;
-    }
-  }
+int16_t axisAdd(int16_t a, int16_t b)
+{
+  return isUpright() ? (a + b) : (a - b);
+}
 
-  // Current row
-  if (nextStateGrid[y][xMinus].state == GRID_STATE_COMPLETE)
-  {
-    nextStateGrid[y][xMinus].state = GRID_STATE_FALLING;
-    nextStateGrid[y][xMinus].velocity = adjacentVelocityResetValue;
-  }
-  if (nextStateGrid[y][xPlus].state == GRID_STATE_COMPLETE)
-  {
-    nextStateGrid[y][xPlus].state = GRID_STATE_FALLING;
-    nextStateGrid[y][xPlus].velocity = adjacentVelocityResetValue;
-  }
+int16_t axisSubtract(int16_t a, int16_t b)
+{
+  return isUpright() ? (a - b) : (a + b);
+}
 
-  // Row below
-  if (withinRows(yPlus))
+bool axisGreaterThan(int16_t a, int16_t b)
+{
+  return isUpright() ? (a > b) : (a < b);
+}
+
+void resetPixel(GridState **grid, uint16_t iRow, uint16_t jCol)
+{
+  grid[iRow][jCol].state = GRID_STATE_FALLING;
+  grid[iRow][jCol].velocity = adjacentVelocityResetValue;
+}
+
+// Reset the pixels that "touch" given pixel. Up, down, left, right, and diagonal.
+void resetAdjacentPixels(GridState **grid, int16_t x, int16_t y)
+{
+  for (auto yRow = y - 1; yRow <= y + 1; yRow++)
   {
-    if (nextStateGrid[yPlus][xMinus].state == GRID_STATE_COMPLETE)
+    for (auto xCol = x - 1; xCol <= x + 1; xCol++)
     {
-      nextStateGrid[yPlus][xMinus].state = GRID_STATE_FALLING;
-      nextStateGrid[yPlus][xMinus].velocity = adjacentVelocityResetValue;
-    }
-    if (nextStateGrid[yPlus][x].state == GRID_STATE_COMPLETE)
-    {
-      nextStateGrid[yPlus][x].state = GRID_STATE_FALLING;
-      nextStateGrid[yPlus][x].velocity = adjacentVelocityResetValue;
-    }
-    if (nextStateGrid[yPlus][xPlus].state == GRID_STATE_COMPLETE)
-    {
-      nextStateGrid[yPlus][xPlus].state = GRID_STATE_FALLING;
-      nextStateGrid[yPlus][xPlus].velocity = adjacentVelocityResetValue;
+      if (yRow == y && xCol == x)
+        continue;
+
+      if (!withinRows(yRow) || !withinCols(xCol))
+        continue;
+
+      if (grid[yRow][xCol].state == GRID_STATE_COMPLETE)
+        resetPixel(grid, yRow, xCol);
     }
   }
 }
 
-void resetAllPixels()
+void resetColumnEdges(uint16_t jCol)
 {
-  Serial.println("Resetting all pixels.");
-
-  for (uint16_t i = 0; i < ROWS; ++i)
+  for (uint16_t iRow = 0; iRow < ROWS; iRow++)
   {
-    for (uint16_t j = 0; j < COLS; ++j)
+    if (stateGrid[iRow][jCol].state == GRID_STATE_NONE)
+      continue;
+
+    if (!withinRows(iRow - 1) || !withinRows(iRow + 1))
     {
-      if (stateGrid[i][j].state != GRID_STATE_NONE)
-      {
-        stateGrid[i][j].state = GRID_STATE_FALLING;
-        stateGrid[i][j].velocity = 1;
-      }
+      resetPixel(stateGrid, iRow, jCol);
+      //resetAdjacentPixels(stateGrid, iRow, jCol);
+    }
+    else if (withinRows(iRow - 1) && stateGrid[iRow - 1][jCol].state != GRID_STATE_COMPLETE)
+    {
+      resetPixel(stateGrid, iRow, jCol);
+      //resetAdjacentPixels(stateGrid, iRow, jCol);
+    }
+    else if (withinRows(iRow + 1) && stateGrid[iRow + 1][jCol].state != GRID_STATE_COMPLETE)
+    {
+      resetPixel(stateGrid, iRow, jCol);
+      //resetAdjacentPixels(stateGrid, iRow, jCol);
     }
   }
+}
 
-  Serial.println("Done resetting all pixels.");
+void resetEdgePixels()
+{
+  Serial.println("Resetting top pixels.");
+
+  for (uint16_t jCol = 0; jCol < COLS; jCol++)
+  {
+    resetColumnEdges(jCol);
+  }
+
+  Serial.println("Done resetting top pixels.");
 }
 
 void setColor(uint16_t xCol, uint16_t yRow, int8_t _red, int8_t _green, int8_t _blue)
@@ -430,26 +452,6 @@ void displaySetup()
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
   // dma_display->setBrightness(255);
-}
-
-bool isUpright()
-{
-  return orientation == Orientation::UPRIGHT;
-}
-
-int16_t axisAdd(int16_t a, int16_t b)
-{
-  return isUpright() ? (a + b) : (a - b);
-}
-
-int16_t axisSubtract(int16_t a, int16_t b)
-{
-  return isUpright() ? (a - b) : (a + b);
-}
-
-bool axisGreaterThan(int16_t a, int16_t b)
-{
-  return isUpright() ? (a > b) : (a < b);
 }
 
 void accelerometerSetup()
@@ -600,7 +602,7 @@ void updateAccelerometerData()
 
   if (orientation != previousOrientation)
   {
-    resetAllPixels();
+    resetEdgePixels();
   }
 }
 
@@ -827,7 +829,7 @@ void loop()
         // setColor(&leds[getPanelXYOffset(j, i)], 0, 0, 0);
         setColor(j, i, 0, 0, 0);
 
-        resetAdjacentPixels(j, i);
+        resetAdjacentPixels(nextStateGrid, j, i);
       }
 
       if (pixelState != GRID_STATE_NONE && !moved)
